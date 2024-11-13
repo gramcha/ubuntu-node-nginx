@@ -38,7 +38,7 @@ WORKDIR /root/ubuntu-node-nginx/
 # only fix working is having pm2 at global and avoiding the npx and install consul service
 RUN npm install -g pm2 && \
     bash install-consul.sh && \
-    bash install-yarn.sh && \
+    bash install-yarn-3-6-1.sh && \
     chmod +x entrypoint.sh && \
     pm2 install pm2-logrotate && \
     pm2 set pm2-logrotate:max_size 10M
