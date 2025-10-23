@@ -37,6 +37,7 @@ WORKDIR /root/ubuntu-node-nginx/
 # https://github.com/Unitech/pm2/issues/1943
 # only fix working is having pm2 at global and avoiding the npx and install consul service
 RUN npm install -g pm2 && \
+    npm install -g sequelize-cli && \
     bash install-consul.sh && \
     bash install-yarn-3-6-1.sh && \
     chmod +x entrypoint.sh && \
