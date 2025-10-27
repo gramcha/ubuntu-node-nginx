@@ -1,4 +1,7 @@
-FROM ubuntu:24.04 AS build_image
+# ========================================
+# STAGE 1: Builder — install everything
+# ========================================
+FROM ubuntu:24.04 AS builder
 
 LABEL maintainer="gramcha <gramcha@outlook.com>"
 
@@ -113,8 +116,5 @@ EXPOSE 443
 
 STOPSIGNAL SIGQUIT
 
-
-
 ENTRYPOINT ["/root/ubuntu-node-nginx/entrypoint.sh"]
-
 CMD ["Hello", ", world!"]

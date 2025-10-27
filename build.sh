@@ -30,6 +30,7 @@
 #version=7.0.3
 #docker buildx build --push --tag gramcha/ubuntu-node-nginx:$version -f Dockerfile-node22-nginx-consul -o type=image --platform=linux/arm64,linux/amd64 .
 
-# ubuntu 24.04, node v24, nginx 1.29.0, consul 1.9.4, wesyprint, sequalizecli
+# ubuntu 24.04, node v24.10.0, nginx 1.28.0, consul 1.9.4, wesyprint, sequalizecli
+# multi stage attempt to reduce size
 version=8.0.1
 docker buildx build --push --tag gramcha/ubuntu-node-nginx:$version -f Dockerfile-node24-nginx-consul -o type=image --platform=linux/arm64,linux/amd64 .
