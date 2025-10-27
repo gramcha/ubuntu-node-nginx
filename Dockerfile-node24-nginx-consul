@@ -1,0 +1,120 @@
+# ========================================
+# STAGE 1: Builder — install everything
+# ========================================
+FROM ubuntu:24.04 AS builder
+
+LABEL maintainer="gramcha <gramcha@outlook.com>"
+
+ENV BOOTSTRAP=bootstrap
+ENV TZ=Etc/UTC
+# important step to avoid interactive question of select timezone during installation
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+# update os and install basic packages
+RUN apt-get -y update && \
+    apt-get -y dist-upgrade && \
+    apt-get install -y sudo curl vim wget net-tools lsof unzip rpl bash-completion uuid-runtime build-essential weasyprint && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+
+
+# ---- Nginx: latest stable from nginx.org (multi-arch safe) ----
+ARG TARGETARCH
+
+SHELL ["/bin/bash", "-c"]
+
+RUN set -euo pipefail && \
+    echo "Building for TARGETARCH=${TARGETARCH}" && \
+    apt-get update && \
+    apt-get install -y gnupg2 curl ca-certificates lsb-release && \
+    \
+    # Add official nginx.org repo (non-interactive key overwrite)
+    curl -fsSL https://nginx.org/keys/nginx_signing.key | \
+        gpg --dearmor --yes -o /usr/share/keyrings/nginx-archive-keyring.gpg && \
+    \
+    echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
+          https://nginx.org/packages/ubuntu $(lsb_release -cs) nginx" \
+          > /etc/apt/sources.list.d/nginx.list && \
+    \
+    echo -e "Package: *\nPin: origin nginx.org\nPin-Priority: 900\n" \
+          > /etc/apt/preferences.d/99nginx && \
+    \
+    # Refresh package index
+    apt-get update && \
+    \
+    # Determine which binary Packages file to query
+    case "${TARGETARCH}" in \
+        amd64)  PKG_ARCH=amd64 ;; \
+        arm64)  PKG_ARCH=arm64 ;; \
+        *)      echo "Unsupported TARGETARCH: ${TARGETARCH}"; exit 1 ;; \
+    esac && \
+    \
+    # Get the **latest version advertised in the repo for this arch**
+    REPO_FULL=$(curl -s \
+        "https://nginx.org/packages/ubuntu/dists/$(lsb_release -cs)/nginx/binary-${PKG_ARCH}/Packages" | \
+        awk '/^Package: nginx$/{p=1} p&&/^Version: /{print $2; p=0}' | head -1) && \
+    REPO_CLEAN=$(echo "$REPO_FULL" | sed -E 's/^[0-9]*://; s/-[0-9].*//') && \
+    REPO_MM=$(echo "$REPO_CLEAN" | cut -d. -f1-2) && \
+    \
+    echo "=== Nginx repo (${PKG_ARCH}) ===" && \
+    echo "Full repo version : $REPO_FULL" && \
+    echo "Clean version     : $REPO_CLEAN" && \
+    echo "Major.minor       : $REPO_MM" && \
+    \
+    # Install / upgrade
+    apt-get install -y nginx && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    \
+    # Get actually installed version
+    INSTALLED_FULL=$(nginx -v 2>&1 | awk -F'nginx/' '{print $2}' | head -1) && \
+    INSTALLED_CLEAN=$(echo "$INSTALLED_FULL" | sed -E 's/-[0-9].*//') && \
+    INSTALLED_MM=$(echo "$INSTALLED_CLEAN" | cut -d. -f1-2) && \
+    \
+    echo "=== Installed Nginx ===" && \
+    echo "Full installed    : $INSTALLED_FULL" && \
+    echo "Clean installed   : $INSTALLED_CLEAN" && \
+    echo "Major.minor       : $INSTALLED_MM" && \
+    \
+    # SUCCESS if installed >= repo (never downgrade)
+    if [ "$INSTALLED_MM" = "$REPO_MM" ] || \
+       [ "$(printf '%s\n' "$INSTALLED_MM" "$REPO_MM" | sort -V | head -n1)" = "$REPO_MM" ]; then \
+        echo "SUCCESS: Nginx $INSTALLED_FULL is >= repo version ($REPO_MM)"; \
+    else \
+        echo "ERROR: Installed $INSTALLED_MM is older than repo $REPO_MM"; \
+        exit 1; \
+    fi && \
+    # Final version check
+    nginx -v
+# ---- Nginx: latest stable from nginx.org (multi-arch safe) ----
+
+
+# install node.js
+RUN curl -sL https://deb.nodesource.com/setup_24.x | bash - && \
+    apt-get install -y nodejs && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+
+
+# before calling the npm install work directory needs to be set from node 18
+WORKDIR /root/ubuntu-node-nginx/
+COPY entrypoint.sh install-consul.sh install-yarn-3-6-1.sh ./
+
+# adding pm2 at global level since npx pm2 create "Cannot find module '/root/.npm/_npx/1286/lib/node_modules/pm2/lib/ProcessContainerFork.js'" error
+# https://github.com/Unitech/pm2/issues/1943
+# only fix working is having pm2 at global and avoiding the npx and install consul service
+RUN npm install -g pm2 && \
+    npm install -g sequelize-cli && \
+    bash install-consul.sh && \
+    bash install-yarn-3-6-1.sh && \
+    chmod +x entrypoint.sh && \
+    pm2 install pm2-logrotate && \
+    pm2 set pm2-logrotate:max_size 10M
+
+EXPOSE 80
+EXPOSE 443
+
+STOPSIGNAL SIGQUIT
+
+ENTRYPOINT ["/root/ubuntu-node-nginx/entrypoint.sh"]
+CMD ["Hello", ", world!"]
