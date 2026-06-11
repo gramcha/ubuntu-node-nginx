@@ -1,6 +1,9 @@
 # ubuntu-node-nginx
 ubuntu-node-nginx docker image with consul, weasyprint
 
+version 9.0.0 - node 24 - docker - gramcha/ubuntu-node-nginx:9.0.0 - platform=linux/arm64,linux/amd64
+ubuntu 24.04 (latest patches), node v24, nginx latest stable, consul 1.9.4, weasyprint, sequelize-cli
+
 version 7.0.2 - node 22 - docker - gramcha/ubuntu-node-nginx:7.0.2 - platform=linux/arm64,linux/amd64
 ubuntu 22.04, node v22.8.0, nginx 1.18.0, consul 1.9.4, wesyprint
 
