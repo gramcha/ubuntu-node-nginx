@@ -1,4 +1,4 @@
-FROM ubuntu AS BUILD_IMAGE
+FROM ubuntu:24.10 AS BUILD_IMAGE
 
 LABEL maintainer="gramcha <gramcha@outlook.com>"
 
