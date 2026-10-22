@@ -36,5 +36,9 @@
 #docker buildx build --push --tag gramcha/ubuntu-node-nginx:$version -f Dockerfile-node24-nginx-consul -o type=image --platform=linux/arm64,linux/amd64 .
 
 # ubuntu 24.04 (latest patches), node v24, nginx latest stable, consul 1.9.4, weasyprint, sequalizecli
-version=9.0.0
+#version=9.0.0
+#docker buildx build --push --tag gramcha/ubuntu-node-nginx:$version -f Dockerfile-node24-nginx-consul -o type=image --platform=linux/arm64,linux/amd64 .
+
+# ubuntu 24.04 (latest patches), node v24.22.1, nginx latest stable-1.30.6, consul 1.9.4, weasyprint, sequalizecli
+version=10.0.0
 docker buildx build --push --tag gramcha/ubuntu-node-nginx:$version -f Dockerfile-node24-nginx-consul -o type=image --platform=linux/arm64,linux/amd64 .
