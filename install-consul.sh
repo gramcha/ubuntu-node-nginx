@@ -1,7 +1,7 @@
 architecture=`uname -m`
 echo $architecture
 
-export CONSUL_VERSION="1.21.2"
+export CONSUL_VERSION="2.1.0"
 export CONSUL_URL="https://releases.hashicorp.com/consul"
 
 if [ "$architecture" = 'aarch64' ];
