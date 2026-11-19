@@ -33,7 +33,7 @@ RUN set -euo pipefail && \
         gpg --dearmor --yes -o /usr/share/keyrings/nginx-archive-keyring.gpg && \
     \
     echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
-          https://nginx.org/packages/ubuntu $(lsb_release -cs) nginx" \
+          https://nginx.org/packages/mainline/ubuntu $(lsb_release -cs) nginx" \
           > /etc/apt/sources.list.d/nginx.list && \
     \
     echo -e "Package: *\nPin: origin nginx.org\nPin-Priority: 900\n" \
@@ -51,7 +51,7 @@ RUN set -euo pipefail && \
     \
     # Get the **latest version advertised in the repo for this arch**
     REPO_FULL=$(curl -s \
-        "https://nginx.org/packages/ubuntu/dists/$(lsb_release -cs)/nginx/binary-${PKG_ARCH}/Packages" | \
+        "https://nginx.org/packages/mainline/ubuntu/dists/$(lsb_release -cs)/nginx/binary-${PKG_ARCH}/Packages" | \
         awk '/^Package: nginx$/{p=1} p&&/^Version: /{print $2; p=0}' | head -1) && \
     REPO_CLEAN=$(echo "$REPO_FULL" | sed -E 's/^[0-9]*://; s/-[0-9].*//') && \
     REPO_MM=$(echo "$REPO_CLEAN" | cut -d. -f1-2) && \
